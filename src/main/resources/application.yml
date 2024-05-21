@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: kinoNight
+
+aws:
+  region: us-east-1
+  securityManager:
+    telegramSecretName: prod/kinonight/telegram

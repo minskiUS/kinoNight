@@ -1,6 +1,6 @@
 package org.home.kinonight.config;
 
-import org.home.kinonight.component.MyAbilityBot;
+import org.home.kinonight.component.KinoManagerBot;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
@@ -17,8 +17,8 @@ public class TelegramConfig {
     }
 
     @Bean
-    public BotSession botSession(TelegramBotsApi telegramBotsApi, MyAbilityBot myAbilityBot) throws TelegramApiException {
-        return telegramBotsApi.registerBot(myAbilityBot);
+    public BotSession botSession(TelegramBotsApi telegramBotsApi, KinoManagerBot kinoManagerBot) throws TelegramApiException {
+        return telegramBotsApi.registerBot(kinoManagerBot);
     }
 
 }
