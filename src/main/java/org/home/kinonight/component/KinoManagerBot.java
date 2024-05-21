@@ -2,7 +2,7 @@ package org.home.kinonight.component;
 
 import org.home.kinonight.constants.Constants;
 import org.home.kinonight.handler.ResponseHandler;
-import org.springframework.core.env.Environment;
+import org.home.kinonight.model.TelegramCredentials;
 import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.objects.Ability;
@@ -11,12 +11,13 @@ import static org.telegram.abilitybots.api.objects.Locality.USER;
 import static org.telegram.abilitybots.api.objects.Privacy.PUBLIC;
 
 @Component
-public class MyAbilityBot extends AbilityBot {
+public class KinoManagerBot extends AbilityBot {
 
     private final ResponseHandler responseHandler;
 
-    public MyAbilityBot(Environment environment) {
-        super(environment.getProperty("telegram.bot.secret"), environment.getProperty("telegram.bot.username"));
+    public KinoManagerBot(TelegramCredentials telegramSecret) {
+        super(telegramSecret.getSecret(), telegramSecret.getUserName());
+
         responseHandler = new ResponseHandler(silent, db);
     }
 
