@@ -1,0 +1,4 @@
+aws:
+
+  securityManager:
+    telegramSecretName: dev/kinonight/telegram
