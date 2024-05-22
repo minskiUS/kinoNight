@@ -4,5 +4,8 @@ spring:
 
 aws:
   region: us-east-1
+
   securityManager:
     telegramSecretName: prod/kinonight/telegram
+    accessKey: ${AWS_ACCESS_KEY_ID}
+    secretKey: ${AWS_SECRET_ACCESS_KEY}
