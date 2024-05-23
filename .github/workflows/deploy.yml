@@ -41,6 +41,7 @@ jobs:
         run: ./gradlew clean
 
   deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
