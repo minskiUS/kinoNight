@@ -1,7 +1,6 @@
 package org.home.kinonight.config;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClient;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
@@ -19,16 +18,12 @@ public class AWSSecretManagerConfig {
     private String region;
     @Value("${aws.securityManager.telegramSecretName}")
     private String telegramSecretName;
-    @Value("${aws.securityManager.accessKey}")
-    private String awsClientID;
-    @Value("${aws.securityManager.secretKey}")
-    private String awsSecretKey;
 
     @Bean
     public AWSSecretsManager awsSecretsManagerClient() {
         return AWSSecretsManagerClient.builder()
                 .withRegion(region)
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsClientID, awsSecretKey)))
+                .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
                 .build();
     }
 
