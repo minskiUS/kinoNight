@@ -2,10 +2,13 @@ package org.home.kinonight.handler;
 
 import org.home.kinonight.constants.Constants;
 import org.home.kinonight.model.UserState;
+import org.home.kinonight.service.UserListService;
+
 import org.telegram.abilitybots.api.db.DBContext;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -14,15 +17,20 @@ import java.util.List;
 import java.util.Map;
 
 import static org.home.kinonight.constants.Constants.START_TEXT;
-import static org.home.kinonight.model.UserState.*;
+import static org.home.kinonight.model.UserState.AWAITING_FILM_LIST_NAME;
+import static org.home.kinonight.model.UserState.AWAITING_OPTION_CHOICE;
 
 public class ResponseHandler {
     private final SilentSender sender;
     private final Map<Long, UserState> chatStates;
+    private final UserListService userListService;
 
-    public ResponseHandler(SilentSender sender, DBContext db) {
+    public ResponseHandler(SilentSender sender,
+                           DBContext db,
+                           UserListService userListService) {
         this.sender = sender;
         chatStates = db.getMap(Constants.CHAT_STATES);
+        this.userListService = userListService;
     }
 
     public void replyToStart(long chatId) {
@@ -32,7 +40,9 @@ public class ResponseHandler {
         sender.execute(message);
         chatStates.put(chatId, AWAITING_FILM_LIST_NAME);
     }
+
     private void replyToWelcomeMessage(long chatId, Message message) {
+        this.userListService.save(message);
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setText("Great! We saved yor list name" + message.getText());
@@ -64,6 +74,7 @@ public class ResponseHandler {
         }
 
     }
+
     public boolean userIsActive(Long chatId) {
         return chatStates.containsKey(chatId);
     }
