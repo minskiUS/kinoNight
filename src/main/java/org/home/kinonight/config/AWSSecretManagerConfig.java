@@ -7,6 +7,7 @@ import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.home.kinonight.model.DatabaseCredentials;
 import org.home.kinonight.model.TelegramCredentials;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +19,8 @@ public class AWSSecretManagerConfig {
     private String region;
     @Value("${aws.securityManager.telegramSecretName}")
     private String telegramSecretName;
+    @Value("${aws.securityManager.dbSecretName}")
+    private String dbSecretName;
 
     @Bean
     public AWSSecretsManager awsSecretsManagerClient() {
@@ -35,6 +38,18 @@ public class AWSSecretManagerConfig {
 
         try {
             return objectMapper.readValue(secretString, TelegramCredentials.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    @Bean(name = "dbSecret")
+    public DatabaseCredentials getDBSecret(AWSSecretsManager awsSecretsManager, ObjectMapper objectMapper) {
+        GetSecretValueRequest getSecretValueRequest = new GetSecretValueRequest().withSecretId(dbSecretName);
+        GetSecretValueResult secretValue = awsSecretsManager.getSecretValue(getSecretValueRequest);
+        String secretString = secretValue.getSecretString();
+
+        try {
+            return objectMapper.readValue(secretString, DatabaseCredentials.class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
