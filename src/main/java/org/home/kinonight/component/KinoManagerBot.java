@@ -5,6 +5,7 @@ import org.home.kinonight.handler.ResponseHandler;
 import org.home.kinonight.model.TelegramCredentials;
 import org.home.kinonight.repository.UserListRepository;
 import org.home.kinonight.service.UserListService;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.abilitybots.api.bot.BaseAbilityBot;
@@ -24,10 +25,10 @@ public class KinoManagerBot extends AbilityBot {
 
     private final ResponseHandler responseHandler;
 
-    public KinoManagerBot(TelegramCredentials telegramSecret, UserListService userListService) {
+    public KinoManagerBot(TelegramCredentials telegramSecret, UserListService userListService, Environment environment) {
         super(telegramSecret.getSecret(), telegramSecret.getUserName());
 
-        responseHandler = new ResponseHandler(silent, db, userListService);
+        responseHandler = new ResponseHandler(silent, db, userListService, environment);
     }
 
     @Override
