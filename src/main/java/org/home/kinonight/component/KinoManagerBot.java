@@ -3,7 +3,6 @@ package org.home.kinonight.component;
 import org.home.kinonight.constants.Constants;
 import org.home.kinonight.handler.ResponseHandler;
 import org.home.kinonight.model.TelegramCredentials;
-import org.home.kinonight.repository.UserListRepository;
 import org.home.kinonight.service.UserListService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
