@@ -44,7 +44,7 @@ public class ResponseHandler {
         chatStates.put(chatId, AWAITING_FILM_LIST_NAME);
     }
 
-    private void replyToWelcomeMessage(long chatId, Message message) {
+    public void replyToWelcomeMessage(long chatId, Message message) {
         try {
             this.userListService.save(message);
             SendMessage sendMessage = new SendMessage();
@@ -58,7 +58,7 @@ public class ResponseHandler {
             sendMessage.setChatId(chatId);
             sendMessage.setText(e.getMessage());
             sender.execute(sendMessage);
-            chatStates.put(chatId, AWAITING_OPTION_CHOICE);
+            chatStates.put(chatId, AWAITING_FILM_LIST_NAME);
         }
     }
 
