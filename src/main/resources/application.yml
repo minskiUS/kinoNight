@@ -3,6 +3,10 @@ spring:
     name: kinoNight
   profiles:
     active: prod
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 aws:
   region: us-east-1
+  securityManager:
+    dbSecretName: rds!db-9a78ee87-1da4-490c-820f-496b7a59d8a4
