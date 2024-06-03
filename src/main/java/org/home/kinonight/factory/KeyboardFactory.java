@@ -13,11 +13,11 @@ import static org.home.kinonight.constants.Buttons.CREATE_NEW_LIST;
 import static org.home.kinonight.constants.Buttons.LOGOUT;
 
 public class KeyboardFactory {
-    public static InlineKeyboardMarkup chooseFilmList(List<String> filmLists) {
+    public static InlineKeyboardMarkup chooseFromList(List<String> buttons) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> inlineButtons = new ArrayList<>();
 
-        for (String filmList : filmLists) {
+        for (String filmList : buttons) {
             InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
             inlineKeyboardButton.setText(filmList);
             inlineKeyboardButton.setCallbackData(filmList);

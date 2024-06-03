@@ -2,6 +2,7 @@ package org.home.kinonight.component;
 
 import org.home.kinonight.handler.ResponseHandler;
 import org.home.kinonight.model.TelegramCredentials;
+import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -19,10 +20,11 @@ public class KinoManagerBot extends AbilityBot {
 
     public KinoManagerBot(TelegramCredentials telegramSecret,
                           UserListService userListService,
-                          Environment environment) {
+                          Environment environment,
+                          FilmService filmService) {
         super(telegramSecret.getSecret(), telegramSecret.getUserName());
 
-        responseHandler = new ResponseHandler(silent, db, userListService, environment);
+        responseHandler = new ResponseHandler(silent, db, userListService, environment, filmService);
     }
 
     @Override
@@ -49,9 +51,9 @@ public class KinoManagerBot extends AbilityBot {
     @Override
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
-        if (START.equalsIgnoreCase(message.getText())) {
+        if (message != null && START.equalsIgnoreCase(message.getText())) {
             responseHandler.replyToStart(message);
-        } else if (LOGOUT.equalsIgnoreCase(message.getText())) {
+        } else if (message != null && LOGOUT.equalsIgnoreCase(message.getText())) {
             responseHandler.deleteChat(message.getChatId());
         } else {
             responseHandler.replyToUpdate(update);

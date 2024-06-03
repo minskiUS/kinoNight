@@ -6,7 +6,6 @@ import org.home.kinonight.exception.ListAlreadyExistsException;
 import org.home.kinonight.exception.NoListNameFoundException;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.repository.UserListRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -14,9 +13,9 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import java.util.List;
 import java.util.Optional;
 
-@AllArgsConstructor
-@Transactional
 @Service
+@Transactional
+@AllArgsConstructor
 public class UserListService {
     private final UserListRepository userListRepository;
 
@@ -37,7 +36,6 @@ public class UserListService {
         userListRepository.save(userList);
     }
 
-    @Modifying
     public void delete(long chatId) {
         userListRepository.deleteByUserId(chatId);
     }

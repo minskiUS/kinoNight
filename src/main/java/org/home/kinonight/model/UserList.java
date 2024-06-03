@@ -1,11 +1,9 @@
 package org.home.kinonight.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -19,4 +17,10 @@ public class UserList {
     private UUID id;
     private long userId;
     private String listName;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "film_user_list",
+            joinColumns = @JoinColumn(name = "user_list_id"),
+            inverseJoinColumns = @JoinColumn(name = "film_id"))
+    private List<Film> films;
 }
