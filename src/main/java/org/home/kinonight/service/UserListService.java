@@ -3,12 +3,16 @@ package org.home.kinonight.service;
 
 import lombok.AllArgsConstructor;
 import org.home.kinonight.exception.ListAlreadyExistsException;
+import org.home.kinonight.exception.NoListNameFoundException;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.repository.UserListRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.Message;
+
+import java.util.List;
+import java.util.Optional;
 
 @AllArgsConstructor
 @Transactional
@@ -38,4 +42,15 @@ public class UserListService {
         userListRepository.deleteByUserId(chatId);
     }
 
+    public List<UserList> findByUserId(long chatId) {
+        return userListRepository.findByUserId(chatId);
+    }
+
+    public UserList findByFilmList(long chatId, String listName) {
+        Optional<UserList> byUserIDAndListName = userListRepository.findByUserIDAndListName(chatId, listName);
+        if (byUserIDAndListName.isPresent()) {
+            return byUserIDAndListName.get();
+        }
+        throw new NoListNameFoundException("List doesn't exist");
+    }
 }
