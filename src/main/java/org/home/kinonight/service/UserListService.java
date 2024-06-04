@@ -2,7 +2,7 @@ package org.home.kinonight.service;
 
 
 import lombok.AllArgsConstructor;
-import org.home.kinonight.exception.ListAlreadyExistsException;
+import org.home.kinonight.exception.AlreadyExistsException;
 import org.home.kinonight.exception.NoListNameFoundException;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.repository.UserListRepository;
@@ -26,7 +26,7 @@ public class UserListService {
         boolean present = userListRepository.findByUserIDAndListName(userId, listName).isPresent();
 
         if (present) {
-            throw new ListAlreadyExistsException("List already exists");
+            throw new AlreadyExistsException("List already exists");
         }
 
         UserList userList = UserList.builder()

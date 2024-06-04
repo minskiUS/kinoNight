@@ -1,5 +1,6 @@
 package org.home.kinonight.handler;
 
+import org.home.kinonight.exception.AlreadyExistsException;
 import org.home.kinonight.factory.KeyboardFactory;
 import org.home.kinonight.model.Film;
 import org.home.kinonight.model.UserList;
@@ -19,6 +20,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRem
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.home.kinonight.constants.Buttons.CREATE_NEW_LIST;
 import static org.home.kinonight.constants.Messages.*;
@@ -27,6 +29,7 @@ import static org.home.kinonight.model.UserState.*;
 public class ResponseHandler {
     private final SilentSender sender;
     private final Map<Long, UserState> chatStates;
+    private final Map<Long, String> activeFilmList;
     private final UserListService userListService;
     private final FilmService filmService;
     private final Environment environment;
@@ -41,6 +44,7 @@ public class ResponseHandler {
         this.userListService = userListService;
         this.environment = environment;
         this.filmService = filmService;
+        activeFilmList = new ConcurrentHashMap<>();
     }
 
     public void replyToStart(Message message) {
@@ -120,9 +124,9 @@ public class ResponseHandler {
 
         if (update.hasCallbackQuery()) {
             String listNameCallbackData = update.getCallbackQuery().getData();
+            activeFilmList.put(chatId, listNameCallbackData);
             List<Film> filmsList = userListService.findByFilmList(chatId, listNameCallbackData).getFilms();
             if (filmsList.isEmpty()) {
-
                 SendMessage createListMessage = new SendMessage();
                 createListMessage.setChatId(chatId);
                 createListMessage.setText(ADD_FILM);
@@ -170,11 +174,20 @@ public class ResponseHandler {
     }
 
     private void saveFilm(long chatId, Message message){
-        filmService.save(message);
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(FILM_ADDED);
-        sender.execute(sendMessage);
+        try {
+            filmService.save(message, activeFilmList);
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(chatId);
+            sendMessage.setText(FILM_ADDED);
+            sender.execute(sendMessage);
+        }
+        catch (AlreadyExistsException e){
+            SendMessage sendMessage = new SendMessage();
+            sendMessage.setChatId(chatId);
+            sendMessage.setText(e.getMessage());
+            sender.execute(sendMessage);
+        }
+
     }
 
     private void optionButtons(long chatId, String text, ReplyKeyboardMarkup replyKeyboardMarkup) {

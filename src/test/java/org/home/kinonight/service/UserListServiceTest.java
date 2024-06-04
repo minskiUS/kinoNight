@@ -1,6 +1,6 @@
 package org.home.kinonight.service;
 
-import org.home.kinonight.exception.ListAlreadyExistsException;
+import org.home.kinonight.exception.AlreadyExistsException;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.repository.UserListRepository;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ class UserListServiceTest {
         Message message = generateMessage();
         when(userListRepository.findByUserIDAndListName(actualUserId, actualListName)).thenReturn(Optional.of(new UserList()));
         // when
-        assertThrows(ListAlreadyExistsException.class, () -> testee.save(message));
+        assertThrows(AlreadyExistsException.class, () -> testee.save(message));
         // then
         verify(userListRepository, never()).save(any());
         verify(userListRepository).findByUserIDAndListName(actualUserId, actualListName);

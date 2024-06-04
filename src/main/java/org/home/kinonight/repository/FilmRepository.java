@@ -13,5 +13,5 @@ import java.util.UUID;
 public interface FilmRepository extends JpaRepository<Film, UUID> {
 
     @Query("select film from Film film where film.filmName = :filmName")
-    Optional<Film> findByUserIDAndFilmName(@Param("filmName") String filmName);
+    Optional<Film> findByFilmName(@Param("filmName") String filmName);
 }
