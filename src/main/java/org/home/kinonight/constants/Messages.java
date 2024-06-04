@@ -10,4 +10,5 @@ public class Messages {
     public static final String FILMS = "You have %s films in %s list:";
     public static final String ADD_FILM = "Enter film you would like to add";
     public static final String FILM_ADDED = "Your film has been added to the list";
+    public static final String GOODBYE = "Thank you for choosing KinoNight Bot!\nWe hope to see you again!";
 }

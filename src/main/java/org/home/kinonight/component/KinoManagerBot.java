@@ -4,7 +4,6 @@ import org.home.kinonight.handler.ResponseHandler;
 import org.home.kinonight.model.TelegramCredentials;
 import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -20,33 +19,16 @@ public class KinoManagerBot extends AbilityBot {
 
     public KinoManagerBot(TelegramCredentials telegramSecret,
                           UserListService userListService,
-                          Environment environment,
                           FilmService filmService) {
         super(telegramSecret.getSecret(), telegramSecret.getUserName());
 
-        responseHandler = new ResponseHandler(silent, db, userListService, environment, filmService);
+        responseHandler = new ResponseHandler(silent, db, userListService, filmService);
     }
 
     @Override
     public long creatorId() {
         return 1L;
     }
-
-    /*public Ability startBot() {
-        return Ability
-                .builder()
-                .name("start")
-                .info(Messages.START_DESCRIPTION)
-                .locality(USER)
-                .privacy(PUBLIC)
-                .action(responseHandler::replyToStart)
-                .build();
-    }*/
-
-    /*public Reply replyToButtons() {
-        BiConsumer<BaseAbilityBot, Update> action = (abilityBot, upd) -> responseHandler.replyToButtons(getChatId(upd), upd);
-        return Reply.of(action, Flag.TEXT,upd -> responseHandler.userIsActive(getChatId(upd)));
-    }*/
 
     @Override
     public void onUpdateReceived(Update update) {
