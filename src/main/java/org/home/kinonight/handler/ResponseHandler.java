@@ -53,7 +53,7 @@ public class ResponseHandler {
         mainPage(chatId);
     }
 
-    private void mainPage(Long chatId) {
+    public void mainPage(Long chatId) {
         List<UserList> byUserId = userListService.findByUserId(chatId);
         if (byUserId.isEmpty()) {
             sendMessage(chatId, CREATE_FILM_LIST);
@@ -66,7 +66,7 @@ public class ResponseHandler {
                     .toList();
             InlineKeyboardMarkup inlineKeyboardMarkup = KeyboardFactory.chooseFromList(filmList);
             sendMessage(chatId, count, inlineKeyboardMarkup);
-            sendMessage(chatId, "Choose", KeyboardFactory.optionButtons());
+            sendMessage(chatId, CHOOSE_LIST, KeyboardFactory.optionButtons());
 
             chatStates.put(chatId, AWAITING_OPTION_CHOICE);
         }
@@ -87,6 +87,7 @@ public class ResponseHandler {
             chatId = update.getCallbackQuery().getFrom().getId();
             switch (chatStates.get(chatId)) {
                 case AWAITING_OPTION_CHOICE -> replyToOptionChoice(chatId, update);
+                case AWAITING_FILM_TO_DELETE -> deleteFilm(chatId, update);
             }
         } else {
             Message message = update.getMessage();
@@ -101,7 +102,7 @@ public class ResponseHandler {
         }
     }
 
-    private void replyToOptionChoice(long chatId, Update update) {
+    public void replyToOptionChoice(long chatId, Update update) {
 
 
         if (update.hasCallbackQuery()) {
@@ -109,8 +110,7 @@ public class ResponseHandler {
             activeFilmList.put(chatId, listNameCallbackData);
             List<Film> filmsList = userListService.findByFilmList(chatId, listNameCallbackData).getFilms();
             if (filmsList.isEmpty()) {
-                sendMessage(chatId, ADD_FILM);
-                chatStates.put(chatId, AWAITING_FILM_NAME);
+                addFilm(update);
             } else {
                 UserList byFilmList = userListService.findByFilmList(chatId, listNameCallbackData);
                 int size = byFilmList.getFilms().size();
@@ -121,6 +121,8 @@ public class ResponseHandler {
                         .toList();
                 InlineKeyboardMarkup inlineKeyboardMarkup = KeyboardFactory.chooseFromList(films);
                 sendMessage(chatId, allFilms, inlineKeyboardMarkup);
+                sendMessage(chatId, CHOOSE_FILM, KeyboardFactory.addFilmDeleteFilmBackLogoutButtons());
+                chatStates.put(chatId, AWAITING_LIST_SELECTION);
             }
 
         } else if (update.hasMessage()) {
@@ -140,6 +142,12 @@ public class ResponseHandler {
         mainPage(chatId);
     }
 
+    public void addFilm(Update update){
+        Long chatId = update.getCallbackQuery().getFrom().getId();
+        sendMessage(chatId, ADD_FILM);
+        chatStates.put(chatId, AWAITING_FILM_NAME);
+    }
+
     private void saveFilm(long chatId, Message message) {
         try {
             filmService.save(message, activeFilmList);
@@ -147,6 +155,25 @@ public class ResponseHandler {
         } catch (AlreadyExistsException e) {
             sendMessage(chatId, e.getMessage());
         }
+        chatStates.put(chatId, AWAITING_OPTION_CHOICE);
+    }
+
+    public void filmToRemoveName(long chatId, String text) {
+        sendMessage(chatId, text);
+        chatStates.put(chatId, AWAITING_FILM_TO_DELETE);
+    }
+
+    private void deleteFilm(long chatId, Update update) {
+        String filmName = update.getCallbackQuery().getData();
+        try {
+            String filmList = activeFilmList.get(chatId);
+            filmService.delete(chatId, filmName, filmList);
+            String filmRemovedMessage = String.format(FILM_REMOVED, filmName, filmList);
+            sendMessage(chatId, filmRemovedMessage);
+        } catch (AlreadyExistsException e) {
+            sendMessage(chatId, e.getMessage());
+        }
+        mainPage(chatId);
     }
 
     private void sendMessage(long chatId, String text, ReplyKeyboard replyKeyboard) {

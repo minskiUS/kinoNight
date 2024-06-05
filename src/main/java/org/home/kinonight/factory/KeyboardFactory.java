@@ -9,8 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.home.kinonight.constants.Buttons.CREATE_NEW_LIST;
-import static org.home.kinonight.constants.Buttons.LOGOUT;
+import static org.home.kinonight.constants.Buttons.*;
 
 public class KeyboardFactory {
     public static InlineKeyboardMarkup chooseFromList(List<String> buttons) {
@@ -21,6 +20,7 @@ public class KeyboardFactory {
             InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
             inlineKeyboardButton.setText(filmList);
             inlineKeyboardButton.setCallbackData(filmList);
+
             inlineButtons.add(List.of(inlineKeyboardButton));
         }
         inlineKeyboardMarkup.setKeyboard(inlineButtons);
@@ -41,6 +41,19 @@ public class KeyboardFactory {
         row.add(newButton(CREATE_NEW_LIST));
         row.add(newButton(LOGOUT));
         keyboardRows.add(row);
+        return new ReplyKeyboardMarkup(keyboardRows);
+    }
+
+    public static ReplyKeyboardMarkup addFilmDeleteFilmBackLogoutButtons(){
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row = new KeyboardRow();
+        KeyboardRow row1 = new KeyboardRow();
+        row.add(newButton(ADD_FILM));
+        row.add(newButton(DELETE_FILM));
+        row1.add(newButton(BACK));
+        row1.add(newButton(LOGOUT));
+        keyboardRows.add(row);
+        keyboardRows.add(row1);
         return new ReplyKeyboardMarkup(keyboardRows);
     }
 

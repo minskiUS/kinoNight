@@ -9,8 +9,8 @@ import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-import static org.home.kinonight.constants.Buttons.LOGOUT;
-import static org.home.kinonight.constants.Buttons.START;
+import static org.home.kinonight.constants.Buttons.*;
+import static org.home.kinonight.constants.Messages.FILM_TO_REMOVE;
 
 @Component
 public class KinoManagerBot extends AbilityBot {
@@ -37,6 +37,12 @@ public class KinoManagerBot extends AbilityBot {
             responseHandler.replyToStart(message);
         } else if (message != null && LOGOUT.equalsIgnoreCase(message.getText())) {
             responseHandler.deleteChat(message.getChatId());
+        } else if (message != null && ADD_FILM.equalsIgnoreCase(message.getText())) {
+            responseHandler.addFilm(update);
+        } else if (message != null && DELETE_FILM.equalsIgnoreCase(message.getText())) {
+            responseHandler.filmToRemoveName(message.getChatId(), FILM_TO_REMOVE);
+        } else if (message != null && BACK.equalsIgnoreCase(message.getText())) {
+            responseHandler.mainPage(message.getChatId());
         } else {
             responseHandler.replyToUpdate(update);
         }
