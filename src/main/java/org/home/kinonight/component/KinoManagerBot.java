@@ -38,11 +38,11 @@ public class KinoManagerBot extends AbilityBot {
         } else if (message != null && LOGOUT.equalsIgnoreCase(message.getText())) {
             responseHandler.deleteChat(message.getChatId());
         } else if (message != null && ADD_FILM.equalsIgnoreCase(message.getText())) {
-            responseHandler.addFilm(update);
-        } else if (message != null && DELETE_FILM.equalsIgnoreCase(message.getText())) {
-            responseHandler.filmToRemoveName(message.getChatId(), FILM_TO_REMOVE);
+            responseHandler.addFilm(message.getChatId());
+        } else if (message != null && REMOVE_FILM.equalsIgnoreCase(message.getText())) {
+            responseHandler.removeFilm(message.getChatId(), FILM_TO_REMOVE);
         } else if (message != null && BACK.equalsIgnoreCase(message.getText())) {
-            responseHandler.mainPage(message.getChatId());
+            responseHandler.filmListsMainPage(message.getChatId());
         } else {
             responseHandler.replyToUpdate(update);
         }

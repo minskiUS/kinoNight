@@ -27,15 +27,7 @@ public class KeyboardFactory {
         return inlineKeyboardMarkup;
     }
 
-    public static ReplyKeyboardMarkup logout(){
-        List<KeyboardRow> keyboardRows = new ArrayList<>();
-        KeyboardRow row = new KeyboardRow();
-        row.add(newButton(LOGOUT));
-        keyboardRows.add(row);
-        return new ReplyKeyboardMarkup(keyboardRows);
-    }
-
-    public static ReplyKeyboardMarkup optionButtons(){
+    public static ReplyKeyboardMarkup optionButtons() {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
         row.add(newButton(CREATE_NEW_LIST));
@@ -44,12 +36,12 @@ public class KeyboardFactory {
         return new ReplyKeyboardMarkup(keyboardRows);
     }
 
-    public static ReplyKeyboardMarkup addFilmDeleteFilmBackLogoutButtons(){
+    public static ReplyKeyboardMarkup addFilmDeleteFilmBackLogoutButtons() {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         KeyboardRow row = new KeyboardRow();
         KeyboardRow row1 = new KeyboardRow();
         row.add(newButton(ADD_FILM));
-        row.add(newButton(DELETE_FILM));
+        row.add(newButton(REMOVE_FILM));
         row1.add(newButton(BACK));
         row1.add(newButton(LOGOUT));
         keyboardRows.add(row);
@@ -57,7 +49,7 @@ public class KeyboardFactory {
         return new ReplyKeyboardMarkup(keyboardRows);
     }
 
-    private static KeyboardButton newButton(String text){
+    private static KeyboardButton newButton(String text) {
         return new KeyboardButton(text);
     }
 }
