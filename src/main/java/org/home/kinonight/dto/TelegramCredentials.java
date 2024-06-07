@@ -1,4 +1,4 @@
-package org.home.kinonight.model;
+package org.home.kinonight.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

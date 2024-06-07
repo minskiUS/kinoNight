@@ -1,10 +1,13 @@
 package org.home.kinonight.handler.sender;
 
+import org.home.kinonight.dto.SetCommandRequest;
 import org.home.kinonight.exception.AlreadyExistsException;
+import org.home.kinonight.feign.TelegramClient;
 import org.home.kinonight.model.Film;
 import org.home.kinonight.model.UserState;
 import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
+import org.home.kinonight.util.TelegramCommandsUtil;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -24,17 +27,20 @@ public class MessageFilmSender {
     private final Map<Long, String> activeFilmList;
     private final UserListService userListService;
     private final FilmService filmService;
+    private final TelegramClient telegramClient;
 
     public MessageFilmSender(SilentSender sender,
                              Map<Long, UserState> chatStates,
                              Map<Long, String> activeFilmList,
                              UserListService userListService,
-                             FilmService filmService) {
+                             FilmService filmService,
+                             TelegramClient telegramClient) {
         this.sender = sender;
         this.chatStates = chatStates;
         this.activeFilmList = activeFilmList;
         this.userListService = userListService;
         this.filmService = filmService;
+        this.telegramClient = telegramClient;
     }
 
     public void mainPage(Long chatId) {
@@ -51,6 +57,8 @@ public class MessageFilmSender {
                     films,
                     sender);
             sendMessage(chatId, CHOOSE_FILM, addFilmDeleteFilmBackLogoutButtons(), sender);
+            SetCommandRequest setCommandRequest = TelegramCommandsUtil.setMyCommandsFilm(filmsInActiveList, chatId);
+            telegramClient.setCommand(setCommandRequest);
 
             chatStates.put(chatId, AWAITING_FILM_CHOICE);
         }

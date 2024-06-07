@@ -17,11 +17,14 @@ import java.util.Optional;
 @Transactional
 @AllArgsConstructor
 public class UserListService {
-    private final UserListRepository userListRepository;
 
+    private final UserListRepository userListRepository;
 
     public void save(Message message) {
         String listName = message.getText();
+        if (listName.startsWith("/")) {
+            // TODO throw exception
+        }
         long userId = message.getFrom().getId();
         boolean present = userListRepository.findByUserIDAndListName(userId, listName).isPresent();
 
@@ -45,6 +48,9 @@ public class UserListService {
     }
 
     public UserList findByFilmList(long chatId, String listName) {
+        if (listName.startsWith("/")) {
+            listName = listName.substring(1);
+        }
         Optional<UserList> byUserIDAndListName = userListRepository.findByUserIDAndListName(chatId, listName);
         if (byUserIDAndListName.isPresent()) {
             return byUserIDAndListName.get();

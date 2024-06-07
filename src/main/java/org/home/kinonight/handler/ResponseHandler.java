@@ -1,5 +1,6 @@
 package org.home.kinonight.handler;
 
+import org.home.kinonight.feign.TelegramClient;
 import org.home.kinonight.handler.sender.MessageFilmSender;
 import org.home.kinonight.handler.sender.MessageUserListSender;
 import org.home.kinonight.model.UserState;
@@ -26,12 +27,13 @@ public class ResponseHandler {
     public ResponseHandler(SilentSender sender,
                            DBContext db,
                            UserListService userListService,
-                           FilmService filmService) {
+                           FilmService filmService,
+                           TelegramClient telegramClient) {
         Map<Long, String> activeFilmList = new ConcurrentHashMap<>();
         this.sender = sender;
         chatStates = db.getMap(CHAT_STATES);
-        this.messageFilmSender = new MessageFilmSender(sender, chatStates, activeFilmList, userListService, filmService);
-        this.messageUserListSender = new MessageUserListSender(sender, chatStates, activeFilmList, userListService, this.messageFilmSender);
+        this.messageFilmSender = new MessageFilmSender(sender, chatStates, activeFilmList, userListService, filmService, telegramClient);
+        this.messageUserListSender = new MessageUserListSender(sender, chatStates, activeFilmList, userListService, this.messageFilmSender, telegramClient);
     }
 
     public void replyToStart(Message message) {
@@ -45,12 +47,13 @@ public class ResponseHandler {
     }
 
     public void replyToUpdate(Update update) {
-        Long chatId;
+
+        long chatId;
 
         if (update.hasCallbackQuery()) {
             chatId = update.getCallbackQuery().getFrom().getId();
             switch (chatStates.get(chatId)) {
-                case AWAITING_OPTION_CHOICE -> messageUserListSender.replyToOptionChoice(chatId, update);
+                case AWAITING_OPTION_CHOICE -> messageUserListSender.replyToListChoice(chatId, update);
                 case AWAITING_FILM_TO_DELETE -> messageFilmSender.removeFilm(chatId, update);
             }
         } else {
@@ -58,25 +61,29 @@ public class ResponseHandler {
             chatId = message.getChatId();
             switch (chatStates.get(chatId)) {
                 case AWAITING_FILM_LIST_NAME -> messageUserListSender.saveFilmList(chatId, message);
-                case AWAITING_OPTION_CHOICE -> messageUserListSender.replyToOptionChoice(chatId, update);
+                case AWAITING_OPTION_CHOICE -> messageUserListSender.replyToListChoice(chatId, update);
                 case AWAITING_FILM_NAME -> messageFilmSender.addFilm(chatId, message);
             }
         }
     }
 
-    public void deleteChat(long chatId){
+    public void deleteChat(long chatId) {
         messageUserListSender.deleteChat(chatId);
     }
 
-    public void addFilm(Long chatId){
+    public void addFilm(Long chatId) {
         messageFilmSender.filmToAddName(chatId);
     }
 
-    public void removeFilm(long chatId, String text){
+    public void removeFilm(long chatId, String text) {
         messageFilmSender.filmToRemoveName(chatId, text);
     }
 
-    public void filmListsMainPage(long chatId){
+    public void filmListsMainPage(long chatId) {
         messageUserListSender.mainPage(chatId);
+    }
+
+    public void createFilmList(Message message) {
+        messageUserListSender.listToAddName(message.getChatId());
     }
 }

@@ -1,7 +1,8 @@
 package org.home.kinonight.component;
 
+import org.home.kinonight.dto.TelegramCredentials;
+import org.home.kinonight.feign.TelegramClient;
 import org.home.kinonight.handler.ResponseHandler;
-import org.home.kinonight.model.TelegramCredentials;
 import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
 import org.springframework.stereotype.Component;
@@ -19,10 +20,11 @@ public class KinoManagerBot extends AbilityBot {
 
     public KinoManagerBot(TelegramCredentials telegramSecret,
                           UserListService userListService,
-                          FilmService filmService) {
+                          FilmService filmService,
+                          TelegramClient telegramClient) {
         super(telegramSecret.getSecret(), telegramSecret.getUserName());
 
-        responseHandler = new ResponseHandler(silent, db, userListService, filmService);
+        responseHandler = new ResponseHandler(silent, db, userListService, filmService, telegramClient);
     }
 
     @Override
@@ -33,15 +35,22 @@ public class KinoManagerBot extends AbilityBot {
     @Override
     public void onUpdateReceived(Update update) {
         Message message = update.getMessage();
-        if (message != null && START.equalsIgnoreCase(message.getText())) {
+        if (message == null) {
+            responseHandler.replyToUpdate(update);
+            return;
+        }
+
+        if (START.equalsIgnoreCase(message.getText())) {
             responseHandler.replyToStart(message);
-        } else if (message != null && LOGOUT.equalsIgnoreCase(message.getText())) {
+        } else if (LOGOUT.equalsIgnoreCase(message.getText())) {
             responseHandler.deleteChat(message.getChatId());
-        } else if (message != null && ADD_FILM.equalsIgnoreCase(message.getText())) {
+        } else if (ADD_FILM.equalsIgnoreCase(message.getText())) {
             responseHandler.addFilm(message.getChatId());
-        } else if (message != null && REMOVE_FILM.equalsIgnoreCase(message.getText())) {
+        } else if (REMOVE_FILM.equalsIgnoreCase(message.getText())) {
             responseHandler.removeFilm(message.getChatId(), FILM_TO_REMOVE);
-        } else if (message != null && BACK.equalsIgnoreCase(message.getText())) {
+        } else if (CREATE_NEW_LIST.equalsIgnoreCase(message.getText())) {
+            responseHandler.createFilmList(message);
+        } else if (BACK.equalsIgnoreCase(message.getText())) {
             responseHandler.filmListsMainPage(message.getChatId());
         } else {
             responseHandler.replyToUpdate(update);

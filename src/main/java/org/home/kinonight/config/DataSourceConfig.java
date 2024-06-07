@@ -1,6 +1,6 @@
 package org.home.kinonight.config;
 
-import org.home.kinonight.model.DatabaseCredentials;
+import org.home.kinonight.dto.DatabaseCredentials;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

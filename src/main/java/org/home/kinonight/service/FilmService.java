@@ -34,7 +34,7 @@ public class FilmService {
                     .anyMatch(getUserListPredicate(chatId, activeFilmList.get(chatId)));
             if (isFilmInList) {
                 throw new AlreadyExistsException("Film already in the list");
-            } else{
+            } else {
                 userLists.addAll(film.getUserLists());
             }
         }
