@@ -2,10 +2,11 @@ package org.home.kinonight.constants;
 
 public class Messages {
 
+    private static final String WATCHED_EMOJI = new String(Character.toChars(0x2705));
+    private static final String NOT_WATCHED_EMOJI = new String(Character.toChars(0x274C));
     public static final String CHAT_STATES = "chatStates";
     public static final String START_TEXT = "Welcome to KinoNight bot, %s %s!";
     public static final String LIST_COUNT = "You have %s list(s)";
-    public static final String FILM_COUNT = "You have %s film(s)";
     public static final String LIST_CREATED = "Your list has been saved";
     public static final String CREATE_FILM_LIST = "Please choose name for your new Film list";
     public static final String FILMS = "You have %s films in %s list:";
@@ -16,4 +17,8 @@ public class Messages {
     public static final String GOODBYE = "Thank you for choosing KinoNight Bot!\nWe hope to see you again!";
     public static final String CHOOSE_FILM = "Choose film you would like to look at";
     public static final String CHOOSE_LIST = "Tap on the list name to see films in the list";
+    public static final String WATCHED = "watched " + WATCHED_EMOJI;
+    public static final String NOT_WATCHED = "not watched " + NOT_WATCHED_EMOJI;
+    public static final String CHOOSE_ACTION = "Choose what you would like to do";
+    public static final String SUCCESS = "Success";
 }

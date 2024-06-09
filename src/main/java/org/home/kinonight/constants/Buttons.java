@@ -1,10 +1,11 @@
 package org.home.kinonight.constants;
 
 public class Buttons {
-    public static final String START = "/start";
-    public static final String LOGOUT = "/logout";
-    public static final String CREATE_NEW_LIST = "/createNewList";
-    public static final String ADD_FILM = "/addFilm";
-    public static final String REMOVE_FILM = "/removeFilm";
-    public static final String BACK = "/back";
+    public static final String START = "Start";
+    public static final String LOGOUT = "Logout";
+    public static final String CREATE_NEW_LIST = "Create New List";
+    public static final String ADD_FILM = "Add Film";
+    public static final String REMOVE_FILM = "Remove Film";
+    public static final String BACK = "Back";
+    public static final String MARK_AS_WATCHED = "Mark As Watched";
 }

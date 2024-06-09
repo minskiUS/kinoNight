@@ -3,6 +3,7 @@ package org.home.kinonight.handler;
 import org.home.kinonight.feign.TelegramClient;
 import org.home.kinonight.handler.sender.MessageFilmSender;
 import org.home.kinonight.handler.sender.MessageUserListSender;
+import org.home.kinonight.model.UserList;
 import org.home.kinonight.model.UserState;
 import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
@@ -29,7 +30,7 @@ public class ResponseHandler {
                            UserListService userListService,
                            FilmService filmService,
                            TelegramClient telegramClient) {
-        Map<Long, String> activeFilmList = new ConcurrentHashMap<>();
+        Map<Long, UserList> activeFilmList = new ConcurrentHashMap<>();
         this.sender = sender;
         chatStates = db.getMap(CHAT_STATES);
         this.messageFilmSender = new MessageFilmSender(sender, chatStates, activeFilmList, userListService, filmService, telegramClient);
@@ -39,7 +40,7 @@ public class ResponseHandler {
     public void replyToStart(Message message) {
         Long chatId = message.getChatId();
         String firstName = message.getFrom().getFirstName();
-        String lastName = message.getFrom().getFirstName();
+        String lastName = message.getFrom().getLastName();
         String welcomeMessage = String.format(START_TEXT, firstName, lastName);
         sendMessage(chatId, welcomeMessage, sender);
 
@@ -55,6 +56,7 @@ public class ResponseHandler {
             switch (chatStates.get(chatId)) {
                 case AWAITING_OPTION_CHOICE -> messageUserListSender.replyToListChoice(chatId, update);
                 case AWAITING_FILM_TO_DELETE -> messageFilmSender.removeFilm(chatId, update);
+                case AWAITING_FILM_CHOICE -> messageFilmSender.selectedFilm(chatId, update);
             }
         } else {
             Message message = update.getMessage();
@@ -85,5 +87,9 @@ public class ResponseHandler {
 
     public void createFilmList(Message message) {
         messageUserListSender.listToAddName(message.getChatId());
+    }
+
+    public void markAsWatched(long chatId){
+        messageFilmSender.markAsWatched(chatId);
     }
 }

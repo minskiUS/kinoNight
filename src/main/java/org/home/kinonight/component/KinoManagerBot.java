@@ -52,7 +52,9 @@ public class KinoManagerBot extends AbilityBot {
             responseHandler.createFilmList(message);
         } else if (BACK.equalsIgnoreCase(message.getText())) {
             responseHandler.filmListsMainPage(message.getChatId());
-        } else {
+        } else if (MARK_AS_WATCHED.equalsIgnoreCase(message.getText())) {
+            responseHandler.markAsWatched(message.getChatId());
+        }else {
             responseHandler.replyToUpdate(update);
         }
     }

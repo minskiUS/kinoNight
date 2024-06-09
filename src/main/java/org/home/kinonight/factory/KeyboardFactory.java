@@ -49,6 +49,18 @@ public class KeyboardFactory {
         return new ReplyKeyboardMarkup(keyboardRows);
     }
 
+    public static ReplyKeyboardMarkup deleteFilmBackMarkAsWatchedButtons() {
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        KeyboardRow row = new KeyboardRow();
+        KeyboardRow row1 = new KeyboardRow();
+        row.add(newButton(MARK_AS_WATCHED));
+        row1.add(newButton(BACK));
+        row1.add(newButton(REMOVE_FILM));
+        keyboardRows.add(row);
+        keyboardRows.add(row1);
+        return new ReplyKeyboardMarkup(keyboardRows);
+    }
+
     private static KeyboardButton newButton(String text) {
         return new KeyboardButton(text);
     }

@@ -4,13 +4,17 @@ import lombok.AllArgsConstructor;
 import org.home.kinonight.exception.AlreadyExistsException;
 import org.home.kinonight.exception.DoesNotExistException;
 import org.home.kinonight.model.Film;
+import org.home.kinonight.model.FilmUserList;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.repository.FilmRepository;
+import org.home.kinonight.repository.FilmUserListRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 @Service
@@ -19,36 +23,38 @@ import java.util.function.Predicate;
 public class FilmService {
 
     private final FilmRepository filmRepository;
-    private final UserListService userListService;
+    private final FilmUserListRepository filmUserListRepository;
 
-    public void save(Message message, Map<Long, String> activeFilmList) {
+    public void save(Message message, Map<Long, UserList> activeFilmList) {
         String filmName = message.getText();
         Long chatId = message.getChatId();
         Optional<Film> filmByName = filmRepository.findByFilmName(filmName);
-        List<UserList> userLists = new ArrayList<>();
-        UUID filmId = null;
+        UUID filmId = UUID.randomUUID();
+        UserList activeUserList = activeFilmList.get(chatId);
         if (filmByName.isPresent()) {
             Film film = filmByName.get();
             filmId = film.getId();
-            boolean isFilmInList = film.getUserLists().stream()
-                    .anyMatch(getUserListPredicate(chatId, activeFilmList.get(chatId)));
+            boolean isFilmInList = film.getFilmUserLists().stream()
+                    .anyMatch(getFilmUserListsPredicate(activeUserList));
             if (isFilmInList) {
                 throw new AlreadyExistsException("Film already in the list");
-            } else {
-                userLists.addAll(film.getUserLists());
             }
         }
-        UserList byFilmList = userListService.findByFilmList(chatId, activeFilmList.get(chatId));
-        userLists.add(byFilmList);
+
         Film film = Film.builder()
+                .id(filmId)
                 .filmName(filmName)
-                .userLists(userLists)
                 .build();
-        film.setId(filmId);
-        filmRepository.save(film);
+        Film savedFilm = filmRepository.save(film);
+
+        FilmUserList newFilmUserList = FilmUserList.builder()
+                .userList(activeUserList)
+                .film(savedFilm)
+                .build();
+        filmUserListRepository.save(newFilmUserList);
     }
 
-    public void delete(long chatId, String filmName, String activeFilmList) {
+    public void delete(String filmName, UserList activeFilmList) {
 
         Optional<Film> filmByName = filmRepository.findByFilmName(filmName);
         if (filmByName.isEmpty()) {
@@ -56,11 +62,29 @@ public class FilmService {
         }
 
         Film film = filmByName.get();
-        film.getUserLists().removeIf(getUserListPredicate(chatId, activeFilmList));
-        filmRepository.save(film);
+        film.getFilmUserLists()
+                .stream()
+                .filter(getFilmUserListsPredicate(activeFilmList))
+                .findFirst()
+                .ifPresent(filmUserListRepository::delete);
     }
 
-    private Predicate<UserList> getUserListPredicate(long chatId, String activeFilmList) {
-        return userList -> userList.getListName().equalsIgnoreCase(activeFilmList) && chatId == userList.getUserId();
+    private Predicate<FilmUserList> getFilmUserListsPredicate(UserList activeFilmList) {
+        return filmUserList -> filmUserList.getUserList().equals(activeFilmList);
+    }
+
+    public Film findByName(String filmName) {
+        return filmRepository.findByFilmName(filmName).get();
+        // TODO improve repository with UserList
+    }
+
+    public void markAsWatched(String filmName, UserList userList) {
+        Film film = filmRepository.findByFilmName(filmName).get();
+        FilmUserList selectedFilmUserList = film.getFilmUserLists().stream()
+                .filter(filmUserList -> filmUserList.getUserList().getId().equals(userList.getId()))
+                .findFirst()
+                .get();
+        selectedFilmUserList.setWatched(!selectedFilmUserList.isWatched());
+        filmUserListRepository.save(selectedFilmUserList);
     }
 }

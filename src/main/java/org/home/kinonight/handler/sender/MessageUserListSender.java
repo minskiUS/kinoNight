@@ -4,6 +4,7 @@ import org.home.kinonight.dto.*;
 import org.home.kinonight.factory.KeyboardFactory;
 import org.home.kinonight.feign.TelegramClient;
 import org.home.kinonight.model.Film;
+import org.home.kinonight.model.FilmUserList;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.model.UserState;
 import org.home.kinonight.service.UserListService;
@@ -17,7 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.home.kinonight.constants.Messages.*;
-import static org.home.kinonight.model.UserState.*;
+import static org.home.kinonight.model.UserState.AWAITING_FILM_LIST_NAME;
+import static org.home.kinonight.model.UserState.AWAITING_OPTION_CHOICE;
 import static org.home.kinonight.util.SendMessageUtil.sendMessage;
 import static org.home.kinonight.util.SendMessageUtil.sendMessageWithKeyboard;
 
@@ -25,14 +27,14 @@ public class MessageUserListSender {
 
     private final SilentSender sender;
     private final Map<Long, UserState> chatStates;
-    private final Map<Long, String> activeFilmList;
+    private final Map<Long, UserList> activeFilmList;
     private final UserListService userListService;
     private final MessageFilmSender messageFilmSender;
     private final TelegramClient telegramClient;
 
     public MessageUserListSender(SilentSender sender,
                                  Map<Long, UserState> chatStates,
-                                 Map<Long, String> activeFilmList,
+                                 Map<Long, UserList> activeFilmList,
                                  UserListService userListService,
                                  MessageFilmSender messageFilmSender,
                                  TelegramClient telegramClient) {
@@ -59,6 +61,7 @@ public class MessageUserListSender {
             GetCommandRequest getCommandRequest = TelegramCommandsUtil.getMyCommands(chatId);
             GetCommandResponse getCommandResponse = telegramClient.getCommand(getCommandRequest);
             List<Command> result = getCommandResponse.getResult();
+            // TODO verify command is expected
             List<String> activeCommands = result.stream()
                     .map(Command::getCommand)
                     .toList();
@@ -75,9 +78,12 @@ public class MessageUserListSender {
         } else {
             listName = update.getMessage().getText();
         }
+        UserList byListName = userListService.findByFilmList(chatId, listName);
 
-        activeFilmList.put(chatId, listName);
-        List<Film> filmsList = userListService.findByFilmList(chatId, listName).getFilms();
+        activeFilmList.put(chatId, byListName);
+        List<Film> filmsList = byListName.getFilmUserLists().stream()
+                .map(FilmUserList::getFilm)
+                .toList();
         if (filmsList.isEmpty()) {
             messageFilmSender.filmToAddName(chatId);
         } else {
