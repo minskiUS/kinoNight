@@ -3,6 +3,7 @@ package org.home.kinonight.model;
 
 public enum UserState {
     AWAITING_FILM_LIST_NAME,
+    AWAITING_LIST_NAME_TO_REMOVE,
     AWAITING_OPTION_CHOICE,
     AWAITING_FILM_NAME,
     AWAITING_LIST_SELECTION,

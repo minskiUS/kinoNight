@@ -11,4 +11,7 @@ public class TelegramCredentials {
 
     @JsonProperty("telegram_username")
     private String userName;
+
+    @JsonProperty("telegram_api_key")
+    private String telegramApiToken;
 }

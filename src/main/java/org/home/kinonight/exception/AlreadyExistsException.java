@@ -1,7 +1,9 @@
 package org.home.kinonight.exception;
 
-public class AlreadyExistsException extends RuntimeException {
-    public AlreadyExistsException(String message) {
-        super(message);
+import org.home.kinonight.model.ExceptionDetails;
+
+public class AlreadyExistsException extends BaseException {
+    public AlreadyExistsException(ExceptionDetails exceptionDetails) {
+        super(exceptionDetails);
     }
 }

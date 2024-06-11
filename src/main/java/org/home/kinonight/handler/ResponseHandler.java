@@ -5,8 +5,10 @@ import org.home.kinonight.handler.sender.MessageFilmSender;
 import org.home.kinonight.handler.sender.MessageUserListSender;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.model.UserState;
+import org.home.kinonight.service.CommandRequestService;
 import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
+import org.springframework.core.env.Environment;
 import org.telegram.abilitybots.api.db.DBContext;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -29,12 +31,13 @@ public class ResponseHandler {
                            DBContext db,
                            UserListService userListService,
                            FilmService filmService,
-                           TelegramClient telegramClient) {
+                           CommandRequestService commandRequestService,
+                           TelegramClient telegramClient, Environment environment) {
         Map<Long, UserList> activeFilmList = new ConcurrentHashMap<>();
         this.sender = sender;
         chatStates = db.getMap(CHAT_STATES);
-        this.messageFilmSender = new MessageFilmSender(sender, chatStates, activeFilmList, userListService, filmService, telegramClient);
-        this.messageUserListSender = new MessageUserListSender(sender, chatStates, activeFilmList, userListService, this.messageFilmSender, telegramClient);
+        this.messageFilmSender = new MessageFilmSender(sender, chatStates, activeFilmList, userListService, filmService, telegramClient, commandRequestService);
+        this.messageUserListSender = new MessageUserListSender(sender, chatStates, activeFilmList, userListService, commandRequestService, this.messageFilmSender, telegramClient, environment);
     }
 
     public void replyToStart(Message message) {
@@ -57,6 +60,7 @@ public class ResponseHandler {
                 case AWAITING_OPTION_CHOICE -> messageUserListSender.replyToListChoice(chatId, update);
                 case AWAITING_FILM_TO_DELETE -> messageFilmSender.removeFilm(chatId, update);
                 case AWAITING_FILM_CHOICE -> messageFilmSender.selectedFilm(chatId, update);
+                case AWAITING_LIST_NAME_TO_REMOVE -> messageUserListSender.removeFilmList(chatId, update);
             }
         } else {
             Message message = update.getMessage();
@@ -91,5 +95,9 @@ public class ResponseHandler {
 
     public void markAsWatched(long chatId){
         messageFilmSender.markAsWatched(chatId);
+    }
+
+    public void removeFilmList(long chatId){
+        messageUserListSender.listToRemoveName(chatId);
     }
 }

@@ -1,12 +1,12 @@
 package org.home.kinonight.handler.sender;
 
 import org.home.kinonight.dto.SetCommandRequest;
-import org.home.kinonight.exception.AlreadyExistsException;
 import org.home.kinonight.feign.TelegramClient;
 import org.home.kinonight.model.Film;
 import org.home.kinonight.model.FilmUserList;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.model.UserState;
+import org.home.kinonight.service.CommandRequestService;
 import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
 import org.home.kinonight.util.TelegramCommandsUtil;
@@ -33,16 +33,18 @@ public class MessageFilmSender {
     private final UserListService userListService;
     private final FilmService filmService;
     private final TelegramClient telegramClient;
+    private final CommandRequestService commandRequestService;
 
     public MessageFilmSender(SilentSender sender,
                              Map<Long, UserState> chatStates,
                              Map<Long, UserList> activeFilmList,
                              UserListService userListService,
                              FilmService filmService,
-                             TelegramClient telegramClient) {
+                             TelegramClient telegramClient, CommandRequestService commandRequestService) {
         this.sender = sender;
         this.chatStates = chatStates;
         this.activeFilmList = activeFilmList;
+        this.commandRequestService = commandRequestService;
         this.activeFilm = new ConcurrentHashMap<>();
         this.userListService = userListService;
         this.filmService = filmService;
@@ -66,16 +68,16 @@ public class MessageFilmSender {
                     films,
                     sender);
             sendMessage(chatId, CHOOSE_FILM, addFilmDeleteFilmBackLogoutButtons(), sender);
-            SetCommandRequest setCommandRequest = TelegramCommandsUtil.setMyCommandsFilm(filmsInActiveList, chatId,activeFilmList.get(chatId));
+            SetCommandRequest setCommandRequest = TelegramCommandsUtil.setMyCommandsFilm(filmsInActiveList, chatId, activeFilmList.get(chatId));
             telegramClient.setCommand(setCommandRequest);
 
             chatStates.put(chatId, AWAITING_FILM_CHOICE);
         }
     }
 
-    public void selectedFilm(Long chatId, Update update) {
-        String selectedFilm = update.getCallbackQuery().getData();
-        Film film = filmService.findByName(selectedFilm);
+    public void selectedFilm(long chatId, Update update) {
+        String selectedFilm = commandRequestService.checkIfCommandExists(chatId, update);
+        Film film = filmService.findByName(selectedFilm, chatId);
         activeFilm.put(chatId, film);
         sendMessage(chatId, CHOOSE_ACTION, deleteFilmBackMarkAsWatchedButtons(), sender);
     }
@@ -86,14 +88,10 @@ public class MessageFilmSender {
     }
 
     public void addFilm(long chatId, Message message) {
-        try {
-            filmService.save(message, activeFilmList);
-            sendMessage(chatId, FILM_ADDED, sender);
-        } catch (AlreadyExistsException e) {
-            sendMessage(chatId, e.getMessage(), sender);
-        }
+        filmService.save(message, activeFilmList);
+        sendMessage(chatId, FILM_ADDED, sender);
+
         mainPage(chatId);
-        chatStates.put(chatId, AWAITING_FILM_CHOICE);
     }
 
     public void filmToRemoveName(long chatId, String text) {
@@ -103,22 +101,20 @@ public class MessageFilmSender {
 
     public void removeFilm(long chatId, Update update) {
         String filmName = update.getCallbackQuery().getData();
-        try {
-            UserList filmList = activeFilmList.get(chatId);
-            filmService.delete(filmName, filmList);
-            String filmRemovedMessage = String.format(FILM_REMOVED, filmName, filmList.getListName());
-            sendMessage(chatId, filmRemovedMessage, sender);
-        } catch (AlreadyExistsException e) {
-            sendMessage(chatId, e.getMessage(), sender);
-        }
+        UserList filmList = activeFilmList.get(chatId);
+        filmService.delete(filmName, filmList);
+        String filmRemovedMessage = String.format(FILM_REMOVED, filmName, filmList.getListName());
+        sendMessage(chatId, filmRemovedMessage, sender);
+
         mainPage(chatId);
     }
 
-    public void markAsWatched(long chatId){
+    public void markAsWatched(long chatId) {
         UserList userList = activeFilmList.get(chatId);
         Film film = activeFilm.get(chatId);
         filmService.markAsWatched(film.getFilmName(), userList);
         sendMessage(chatId, SUCCESS, sender);
+
         mainPage(chatId);
     }
 }

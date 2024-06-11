@@ -1,5 +1,6 @@
 package org.home.kinonight.factory;
 
+import org.springframework.core.env.Environment;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -7,6 +8,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.home.kinonight.constants.Buttons.*;
@@ -27,17 +29,24 @@ public class KeyboardFactory {
         return inlineKeyboardMarkup;
     }
 
-    public static ReplyKeyboardMarkup optionButtons() {
+    public static ReplyKeyboardMarkup optionButtons(Environment environment) {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
+        boolean isDev = Arrays.stream(environment.getActiveProfiles()).anyMatch(profile -> profile.equalsIgnoreCase("dev"));
         KeyboardRow row = new KeyboardRow();
         row.add(newButton(CREATE_NEW_LIST));
-        row.add(newButton(LOGOUT));
+        if (isDev) {
+            row.add(newButton(LOGOUT));
+            row.add(newButton(REMOVE_USER_LIST));
+        } else {
+            row.add(newButton(REMOVE_USER_LIST));
+        }
         keyboardRows.add(row);
         return new ReplyKeyboardMarkup(keyboardRows);
     }
 
     public static ReplyKeyboardMarkup addFilmDeleteFilmBackLogoutButtons() {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
+
         KeyboardRow row = new KeyboardRow();
         KeyboardRow row1 = new KeyboardRow();
         row.add(newButton(ADD_FILM));

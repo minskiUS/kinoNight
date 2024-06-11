@@ -3,6 +3,7 @@ package org.home.kinonight.service;
 import lombok.AllArgsConstructor;
 import org.home.kinonight.exception.AlreadyExistsException;
 import org.home.kinonight.exception.DoesNotExistException;
+import org.home.kinonight.model.ExceptionDetails;
 import org.home.kinonight.model.Film;
 import org.home.kinonight.model.FilmUserList;
 import org.home.kinonight.model.UserList;
@@ -37,7 +38,8 @@ public class FilmService {
             boolean isFilmInList = film.getFilmUserLists().stream()
                     .anyMatch(getFilmUserListsPredicate(activeUserList));
             if (isFilmInList) {
-                throw new AlreadyExistsException("Film already in the list");
+                ExceptionDetails exceptionDetails = new ExceptionDetails(chatId, "Film already in the list");
+                throw new AlreadyExistsException(exceptionDetails);
             }
         }
 
@@ -58,7 +60,8 @@ public class FilmService {
 
         Optional<Film> filmByName = filmRepository.findByFilmName(filmName);
         if (filmByName.isEmpty()) {
-            throw new DoesNotExistException("Film not found");
+            ExceptionDetails exceptionDetails = new ExceptionDetails(activeFilmList.getUserId(), "Film not found");
+            throw new DoesNotExistException(exceptionDetails);
         }
 
         Film film = filmByName.get();
@@ -73,17 +76,31 @@ public class FilmService {
         return filmUserList -> filmUserList.getUserList().equals(activeFilmList);
     }
 
-    public Film findByName(String filmName) {
+    public Film findByName(String filmName, long chatId) {
+        if (filmRepository.findByFilmName(filmName).isEmpty()) {
+            ExceptionDetails exceptionDetails = new ExceptionDetails(chatId, "Film not found");
+            throw new DoesNotExistException(exceptionDetails);
+        }
         return filmRepository.findByFilmName(filmName).get();
+        }
         // TODO improve repository with UserList
-    }
 
     public void markAsWatched(String filmName, UserList userList) {
-        Film film = filmRepository.findByFilmName(filmName).get();
-        FilmUserList selectedFilmUserList = film.getFilmUserLists().stream()
+
+        Optional<Film> optionalFilm = filmRepository.findByFilmName(filmName);
+        ExceptionDetails exceptionDetails = new ExceptionDetails(userList.getUserId(), "Film not found");
+        if (optionalFilm.isEmpty()){
+            throw new DoesNotExistException(exceptionDetails);
+        }
+
+        Film film = optionalFilm.get();
+        Optional<FilmUserList> optionalFilmUserList = film.getFilmUserLists().stream()
                 .filter(filmUserList -> filmUserList.getUserList().getId().equals(userList.getId()))
-                .findFirst()
-                .get();
+                .findFirst();
+        if (optionalFilmUserList.isEmpty()){
+            throw new DoesNotExistException(exceptionDetails);
+        }
+        FilmUserList selectedFilmUserList = optionalFilmUserList.get();
         selectedFilmUserList.setWatched(!selectedFilmUserList.isWatched());
         filmUserListRepository.save(selectedFilmUserList);
     }

@@ -8,6 +8,8 @@ public class Messages {
     public static final String START_TEXT = "Welcome to KinoNight bot, %s %s!";
     public static final String LIST_COUNT = "You have %s list(s)";
     public static final String LIST_CREATED = "Your list has been saved";
+    public static final String LIST_REMOVED = "List %s has been removed";
+    public static final String REMOVE_LIST_NAME = "please select film list you want to remove";
     public static final String CREATE_FILM_LIST = "Please choose name for your new Film list";
     public static final String FILMS = "You have %s films in %s list:";
     public static final String ADD_FILM = "Enter film you would like to add";

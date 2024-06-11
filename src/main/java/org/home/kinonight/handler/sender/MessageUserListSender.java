@@ -7,8 +7,10 @@ import org.home.kinonight.model.Film;
 import org.home.kinonight.model.FilmUserList;
 import org.home.kinonight.model.UserList;
 import org.home.kinonight.model.UserState;
+import org.home.kinonight.service.CommandRequestService;
 import org.home.kinonight.service.UserListService;
 import org.home.kinonight.util.TelegramCommandsUtil;
+import org.springframework.core.env.Environment;
 import org.telegram.abilitybots.api.sender.SilentSender;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -18,8 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.home.kinonight.constants.Messages.*;
-import static org.home.kinonight.model.UserState.AWAITING_FILM_LIST_NAME;
-import static org.home.kinonight.model.UserState.AWAITING_OPTION_CHOICE;
+import static org.home.kinonight.model.UserState.*;
 import static org.home.kinonight.util.SendMessageUtil.sendMessage;
 import static org.home.kinonight.util.SendMessageUtil.sendMessageWithKeyboard;
 
@@ -29,21 +30,27 @@ public class MessageUserListSender {
     private final Map<Long, UserState> chatStates;
     private final Map<Long, UserList> activeFilmList;
     private final UserListService userListService;
+    private final CommandRequestService commandRequestService;
     private final MessageFilmSender messageFilmSender;
     private final TelegramClient telegramClient;
+    private final Environment environment;
 
     public MessageUserListSender(SilentSender sender,
                                  Map<Long, UserState> chatStates,
                                  Map<Long, UserList> activeFilmList,
                                  UserListService userListService,
+                                 CommandRequestService commandRequestService,
                                  MessageFilmSender messageFilmSender,
-                                 TelegramClient telegramClient) {
+                                 TelegramClient telegramClient,
+                                 Environment environment) {
         this.sender = sender;
         this.chatStates = chatStates;
         this.activeFilmList = activeFilmList;
         this.userListService = userListService;
+        this.commandRequestService = commandRequestService;
         this.messageFilmSender = messageFilmSender;
         this.telegramClient = telegramClient;
+        this.environment = environment;
     }
 
     public void mainPage(Long chatId) {
@@ -55,32 +62,18 @@ public class MessageUserListSender {
             List<UserList> userLists = userListService.findByUserId(chatId);
             List<String> listNames = userLists.stream().map(UserList::getListName).toList();
             sendMessageWithKeyboard(chatId, byUserId.size(), LIST_COUNT, listNames, sender);
-            sendMessage(chatId, CHOOSE_LIST, KeyboardFactory.optionButtons(), sender);
+            sendMessage(chatId, CHOOSE_LIST, KeyboardFactory.optionButtons(environment), sender);
             SetCommandRequest setCommandRequest = TelegramCommandsUtil.setMyCommands(userLists, chatId);
             telegramClient.setCommand(setCommandRequest);
-            GetCommandRequest getCommandRequest = TelegramCommandsUtil.getMyCommands(chatId);
-            GetCommandResponse getCommandResponse = telegramClient.getCommand(getCommandRequest);
-            List<Command> result = getCommandResponse.getResult();
-            // TODO verify command is expected
-            List<String> activeCommands = result.stream()
-                    .map(Command::getCommand)
-                    .toList();
-
             chatStates.put(chatId, AWAITING_OPTION_CHOICE);
         }
     }
 
     public void replyToListChoice(long chatId, Update update) {
-        String listName;
-        if (update.hasCallbackQuery()) {
-            listName = update.getCallbackQuery().getData();
-
-        } else {
-            listName = update.getMessage().getText();
-        }
+        String listName = commandRequestService.checkIfCommandExists(chatId, update);
         UserList byListName = userListService.findByFilmList(chatId, listName);
-
         activeFilmList.put(chatId, byListName);
+
         List<Film> filmsList = byListName.getFilmUserLists().stream()
                 .map(FilmUserList::getFilm)
                 .toList();
@@ -99,6 +92,7 @@ public class MessageUserListSender {
     public void saveFilmList(long chatId, Message message) {
         userListService.save(message);
         sendMessage(chatId, LIST_CREATED, sender);
+
         mainPage(chatId);
     }
 
@@ -109,5 +103,19 @@ public class MessageUserListSender {
         sendMessage(chatId, GOODBYE, replyKeyboardRemove, sender);
         chatStates.remove(chatId);
         userListService.delete(chatId);
+    }
+
+    public void listToRemoveName(Long chatId) {
+        sendMessage(chatId, REMOVE_LIST_NAME, sender);
+        chatStates.put(chatId, AWAITING_LIST_NAME_TO_REMOVE);
+    }
+
+    public void removeFilmList(long chatId, Update update){
+        String listName = update.getCallbackQuery().getData();
+        String listRemovedMessage = String.format(LIST_REMOVED, listName);
+        userListService.deleteByListName(chatId, listName);
+        sendMessage(chatId, listRemovedMessage, sender);
+
+        mainPage(chatId);
     }
 }

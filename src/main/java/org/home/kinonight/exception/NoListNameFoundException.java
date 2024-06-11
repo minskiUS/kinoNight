@@ -1,7 +1,9 @@
 package org.home.kinonight.exception;
 
-public class NoListNameFoundException extends RuntimeException {
-    public NoListNameFoundException(String message) {
-        super(message);
+import org.home.kinonight.model.ExceptionDetails;
+
+public class NoListNameFoundException extends BaseException {
+    public NoListNameFoundException(ExceptionDetails exceptionDetails) {
+        super(exceptionDetails);
     }
 }

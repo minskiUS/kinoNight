@@ -3,8 +3,12 @@ package org.home.kinonight.component;
 import org.home.kinonight.dto.TelegramCredentials;
 import org.home.kinonight.feign.TelegramClient;
 import org.home.kinonight.handler.ResponseHandler;
+import org.home.kinonight.model.ExceptionDetails;
+import org.home.kinonight.service.CommandRequestService;
 import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
+import org.home.kinonight.util.SendMessageUtil;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.telegram.abilitybots.api.bot.AbilityBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -21,10 +25,12 @@ public class KinoManagerBot extends AbilityBot {
     public KinoManagerBot(TelegramCredentials telegramSecret,
                           UserListService userListService,
                           FilmService filmService,
-                          TelegramClient telegramClient) {
+                          CommandRequestService commandRequestService,
+                          TelegramClient telegramClient,
+                          Environment environment) {
         super(telegramSecret.getSecret(), telegramSecret.getUserName());
 
-        responseHandler = new ResponseHandler(silent, db, userListService, filmService, telegramClient);
+        responseHandler = new ResponseHandler(silent, db, userListService, filmService, commandRequestService, telegramClient, environment);
     }
 
     @Override
@@ -40,7 +46,7 @@ public class KinoManagerBot extends AbilityBot {
             return;
         }
 
-        if (START.equalsIgnoreCase(message.getText())) {
+        if (START.equalsIgnoreCase(message.getText()) || ANOTHER_START.equalsIgnoreCase(message.getText())) {
             responseHandler.replyToStart(message);
         } else if (LOGOUT.equalsIgnoreCase(message.getText())) {
             responseHandler.deleteChat(message.getChatId());
@@ -54,8 +60,14 @@ public class KinoManagerBot extends AbilityBot {
             responseHandler.filmListsMainPage(message.getChatId());
         } else if (MARK_AS_WATCHED.equalsIgnoreCase(message.getText())) {
             responseHandler.markAsWatched(message.getChatId());
-        }else {
+        } else if (REMOVE_USER_LIST.equalsIgnoreCase(message.getText())) {
+            responseHandler.removeFilmList(message.getChatId());
+        } else {
             responseHandler.replyToUpdate(update);
         }
+    }
+
+    public void sendExceptionMessageToUser(ExceptionDetails exceptionDetails) {
+        SendMessageUtil.sendMessage(exceptionDetails.getChatId(), exceptionDetails.getMessage(), silent);
     }
 }
