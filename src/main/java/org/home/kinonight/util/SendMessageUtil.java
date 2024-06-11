@@ -9,6 +9,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import java.util.List;
 
 public class SendMessageUtil {
+
+    private SendMessageUtil(){}
+
     public static void sendMessage(long chatId, String text, ReplyKeyboard replyKeyboard, SilentSender sender) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);

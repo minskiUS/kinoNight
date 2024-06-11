@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Command {
+public class CommandRequest {
     private String command;
     private String description;
 }

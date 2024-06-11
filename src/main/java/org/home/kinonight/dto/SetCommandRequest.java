@@ -10,6 +10,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SetCommandRequest {
-    private List<Command> commands;
+    private List<CommandRequest> commandRequests;
     private Scope scope;
 }

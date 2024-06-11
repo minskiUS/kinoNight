@@ -1,6 +1,9 @@
 package org.home.kinonight.constants;
 
 public class Buttons {
+
+    private Buttons(){}
+
     public static final String START = "Start";
     public static final String ANOTHER_START = "/start";
     public static final String LOGOUT = "Logout";

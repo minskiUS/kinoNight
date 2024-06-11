@@ -1,7 +1,7 @@
 package org.home.kinonight.service;
 
 import lombok.AllArgsConstructor;
-import org.home.kinonight.dto.Command;
+import org.home.kinonight.dto.CommandRequest;
 import org.home.kinonight.dto.GetCommandRequest;
 import org.home.kinonight.dto.GetCommandResponse;
 import org.home.kinonight.exception.DoesNotExistException;
@@ -22,9 +22,9 @@ public class CommandRequestService {
     public String checkIfCommandExists(long chatId, Update update) {
         GetCommandRequest getCommandRequest = TelegramCommandsUtil.getMyCommands(chatId);
         GetCommandResponse getCommandResponse = telegramClient.getCommand(getCommandRequest);
-        List<Command> result = getCommandResponse.getResult();
+        List<CommandRequest> result = getCommandResponse.getResult();
         List<String> activeCommands = result.stream()
-                .map(Command::getCommand)
+                .map(CommandRequest::getCommand)
                 .toList();
         String command;
         if (update.hasCallbackQuery()) {

@@ -14,6 +14,9 @@ import java.util.List;
 import static org.home.kinonight.constants.Buttons.*;
 
 public class KeyboardFactory {
+
+    private KeyboardFactory(){}
+
     public static InlineKeyboardMarkup chooseFromList(List<String> buttons) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> inlineButtons = new ArrayList<>();

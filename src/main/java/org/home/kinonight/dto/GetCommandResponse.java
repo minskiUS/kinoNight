@@ -9,5 +9,5 @@ import java.util.List;
 @NoArgsConstructor
 public class GetCommandResponse {
     private boolean ok;
-    private List<Command> result;
+    private List<CommandRequest> result;
 }

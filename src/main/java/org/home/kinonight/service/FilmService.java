@@ -18,6 +18,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+import static org.home.kinonight.constants.Messages.FILM_NOT_FOUND;
+
 @Service
 @Transactional
 @AllArgsConstructor
@@ -60,7 +62,7 @@ public class FilmService {
 
         Optional<Film> filmByName = filmRepository.findByFilmName(filmName);
         if (filmByName.isEmpty()) {
-            ExceptionDetails exceptionDetails = new ExceptionDetails(activeFilmList.getUserId(), "Film not found");
+            ExceptionDetails exceptionDetails = new ExceptionDetails(activeFilmList.getUserId(), FILM_NOT_FOUND);
             throw new DoesNotExistException(exceptionDetails);
         }
 
@@ -78,7 +80,7 @@ public class FilmService {
 
     public Film findByName(String filmName, long chatId) {
         if (filmRepository.findByFilmName(filmName).isEmpty()) {
-            ExceptionDetails exceptionDetails = new ExceptionDetails(chatId, "Film not found");
+            ExceptionDetails exceptionDetails = new ExceptionDetails(chatId, FILM_NOT_FOUND);
             throw new DoesNotExistException(exceptionDetails);
         }
         return filmRepository.findByFilmName(filmName).get();
@@ -88,7 +90,7 @@ public class FilmService {
     public void markAsWatched(String filmName, UserList userList) {
 
         Optional<Film> optionalFilm = filmRepository.findByFilmName(filmName);
-        ExceptionDetails exceptionDetails = new ExceptionDetails(userList.getUserId(), "Film not found");
+        ExceptionDetails exceptionDetails = new ExceptionDetails(userList.getUserId(), FILM_NOT_FOUND);
         if (optionalFilm.isEmpty()){
             throw new DoesNotExistException(exceptionDetails);
         }

@@ -2,6 +2,8 @@ package org.home.kinonight.constants;
 
 public class Messages {
 
+    private Messages(){}
+
     private static final String WATCHED_EMOJI = new String(Character.toChars(0x2705));
     private static final String NOT_WATCHED_EMOJI = new String(Character.toChars(0x274C));
     public static final String CHAT_STATES = "chatStates";
@@ -23,4 +25,6 @@ public class Messages {
     public static final String NOT_WATCHED = "not watched " + NOT_WATCHED_EMOJI;
     public static final String CHOOSE_ACTION = "Choose what you would like to do";
     public static final String SUCCESS = "Success";
+    public static final String FILM_NOT_FOUND = "Film not found";
+    public static final String NOT_FOUND = "Not found";
 }
