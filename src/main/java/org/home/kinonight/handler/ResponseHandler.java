@@ -1,114 +1,103 @@
 package org.home.kinonight.handler;
 
-import org.home.kinonight.constants.Constants;
+import org.home.kinonight.feign.TelegramClient;
+import org.home.kinonight.handler.sender.MessageFilmSender;
+import org.home.kinonight.handler.sender.MessageUserListSender;
+import org.home.kinonight.model.UserList;
 import org.home.kinonight.model.UserState;
+import org.home.kinonight.service.CommandRequestService;
+import org.home.kinonight.service.FilmService;
 import org.home.kinonight.service.UserListService;
-
 import org.springframework.core.env.Environment;
 import org.telegram.abilitybots.api.db.DBContext;
 import org.telegram.abilitybots.api.sender.SilentSender;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
+import org.telegram.telegrambots.meta.api.objects.Update;
 
-import java.util.*;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static org.home.kinonight.constants.Constants.START_TEXT;
-import static org.home.kinonight.model.UserState.AWAITING_FILM_LIST_NAME;
-import static org.home.kinonight.model.UserState.AWAITING_OPTION_CHOICE;
+import static org.home.kinonight.constants.Messages.CHAT_STATES;
+import static org.home.kinonight.constants.Messages.START_TEXT;
+import static org.home.kinonight.util.SendMessageUtil.sendMessage;
 
 public class ResponseHandler {
     private final SilentSender sender;
     private final Map<Long, UserState> chatStates;
-    private final UserListService userListService;
-    private final Environment environment;
+    private final MessageUserListSender messageUserListSender;
+    private final MessageFilmSender messageFilmSender;
 
     public ResponseHandler(SilentSender sender,
                            DBContext db,
                            UserListService userListService,
-                           Environment environment) {
+                           FilmService filmService,
+                           CommandRequestService commandRequestService,
+                           TelegramClient telegramClient, Environment environment) {
+        Map<Long, UserList> activeFilmList = new ConcurrentHashMap<>();
         this.sender = sender;
-        chatStates = db.getMap(Constants.CHAT_STATES);
-        this.userListService = userListService;
-        this.environment = environment;
+        chatStates = db.getMap(CHAT_STATES);
+        this.messageFilmSender = new MessageFilmSender(sender, chatStates, activeFilmList, userListService, filmService, telegramClient, commandRequestService);
+        this.messageUserListSender = new MessageUserListSender(sender, chatStates, activeFilmList, userListService, commandRequestService, this.messageFilmSender, telegramClient, environment);
     }
 
-    public void replyToStart(long chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText(START_TEXT);
-        sender.execute(message);
-        chatStates.put(chatId, AWAITING_FILM_LIST_NAME);
+    public void replyToStart(Message message) {
+        Long chatId = message.getChatId();
+        String firstName = message.getFrom().getFirstName();
+        String lastName = message.getFrom().getLastName();
+        String welcomeMessage = String.format(START_TEXT, firstName, lastName);
+        sendMessage(chatId, welcomeMessage, sender);
+
+        messageUserListSender.mainPage(chatId);
     }
 
-    public void replyToWelcomeMessage(long chatId, Message message) {
-        try {
-            this.userListService.save(message);
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText("Great! We saved yor list name" + message.getText());
-            sender.execute(sendMessage);
-            replyToFilmListName(chatId);
-            chatStates.put(chatId, AWAITING_OPTION_CHOICE);
-        } catch (Exception e) {
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.setChatId(chatId);
-            sendMessage.setText(e.getMessage());
-            sender.execute(sendMessage);
-            chatStates.put(chatId, AWAITING_FILM_LIST_NAME);
+    public void replyToUpdate(Update update) {
+
+        long chatId;
+
+        if (update.hasCallbackQuery()) {
+            chatId = update.getCallbackQuery().getFrom().getId();
+            switch (chatStates.get(chatId)) {
+                case AWAITING_OPTION_CHOICE -> messageUserListSender.replyToListChoice(chatId, update);
+                case AWAITING_FILM_TO_DELETE -> messageFilmSender.removeFilm(chatId, update);
+                case AWAITING_FILM_CHOICE -> messageFilmSender.selectedFilm(chatId, update);
+                case AWAITING_LIST_NAME_TO_REMOVE -> messageUserListSender.removeFilmList(chatId, update);
+            }
+        } else {
+            Message message = update.getMessage();
+            chatId = message.getChatId();
+            switch (chatStates.get(chatId)) {
+                case AWAITING_FILM_LIST_NAME -> messageUserListSender.saveFilmList(chatId, message);
+                case AWAITING_OPTION_CHOICE -> messageUserListSender.replyToListChoice(chatId, update);
+                case AWAITING_FILM_NAME -> messageFilmSender.addFilm(chatId, message);
+            }
         }
     }
 
-    private void replyToFilmListName(long chatId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText("Now let's choose between two options");
-        sendMessage.setReplyMarkup(addOrRemove());
-        sender.execute(sendMessage);
+    public void deleteChat(long chatId) {
+        messageUserListSender.deleteChat(chatId);
     }
 
-    public ReplyKeyboard addOrRemove() {
-        List<KeyboardRow> keyboardRows = new ArrayList<>();
-        KeyboardRow row = new KeyboardRow();
-        boolean present = Arrays.stream(this.environment.getActiveProfiles())
-                .anyMatch("dev"::equalsIgnoreCase);
-        row.add("Add film");
-        row.add("Remove film");
-        keyboardRows.add(row);
-        if (present) {
-            KeyboardRow row1 = new KeyboardRow();
-            row1.add(("Delete Chat(WARNING)"));
-            keyboardRows.add(row1);
-        }
-        return new ReplyKeyboardMarkup(keyboardRows);
+    public void addFilm(Long chatId) {
+        messageFilmSender.filmToAddName(chatId);
     }
 
-    private void deleteChat(long chatId) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText("Thank you for choosing KinoNight Bot!\nWe hope to see you again!");
-        chatStates.remove(chatId);
-        sendMessage.setReplyMarkup(new ReplyKeyboardRemove(true));
-        sender.execute(sendMessage);
-        userListService.delete(chatId);
+    public void removeFilm(long chatId, String text) {
+        messageFilmSender.filmToRemoveName(chatId, text);
     }
 
-    public void replyToButtons(long chatId, Message message) {
-        if (message.getText().equalsIgnoreCase("Delete Chat(WARNING)")) {
-            deleteChat(chatId);
-        }
-
-        switch (chatStates.get(chatId)) {
-            case AWAITING_FILM_LIST_NAME -> replyToWelcomeMessage(chatId, message);
-            case AWAITING_OPTION_CHOICE -> replyToFilmListName(chatId);
-        }
-
+    public void filmListsMainPage(long chatId) {
+        messageUserListSender.mainPage(chatId);
     }
 
-    public boolean userIsActive(Long chatId) {
-        return chatStates.containsKey(chatId);
+    public void createFilmList(Message message) {
+        messageUserListSender.listToAddName(message.getChatId());
+    }
+
+    public void markAsWatched(long chatId){
+        messageFilmSender.markAsWatched(chatId);
+    }
+
+    public void removeFilmList(long chatId){
+        messageUserListSender.listToRemoveName(chatId);
     }
 }

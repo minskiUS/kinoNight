@@ -1,4 +1,4 @@
-package org.home.kinonight.model;
+package org.home.kinonight.dto;
 
 import lombok.Data;
 

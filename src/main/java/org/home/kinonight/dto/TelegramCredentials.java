@@ -1,4 +1,4 @@
-package org.home.kinonight.model;
+package org.home.kinonight.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -11,4 +11,7 @@ public class TelegramCredentials {
 
     @JsonProperty("telegram_username")
     private String userName;
+
+    @JsonProperty("telegram_api_key")
+    private String telegramApiToken;
 }

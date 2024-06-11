@@ -5,8 +5,19 @@ spring:
     active: prod
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 5000
+            readTimeout: 5000
+            loggerLevel: full
 
 aws:
   region: us-east-1
   securityManager:
     dbSecretName: rds!db-9a78ee87-1da4-490c-820f-496b7a59d8a4
+
+telegram:
+  apiUrl: https://api.telegram.org
