@@ -74,18 +74,13 @@ public class FilmService {
                 .ifPresent(filmUserListRepository::delete);
     }
 
-    private Predicate<FilmUserList> getFilmUserListsPredicate(UserList activeFilmList) {
-        return filmUserList -> filmUserList.getUserList().equals(activeFilmList);
-    }
 
     public Film findByName(String filmName, long chatId) {
-        if (filmRepository.findByFilmName(filmName).isEmpty()) {
+        return filmRepository.findByFilmName(filmName).orElseThrow(() -> {
             ExceptionDetails exceptionDetails = new ExceptionDetails(chatId, FILM_NOT_FOUND);
-            throw new DoesNotExistException(exceptionDetails);
-        }
-        return filmRepository.findByFilmName(filmName).get();
-        }
-        // TODO improve repository with UserList
+            return new DoesNotExistException(exceptionDetails);
+        });
+    }
 
     public void markAsWatched(String filmName, UserList userList) {
 
@@ -105,5 +100,9 @@ public class FilmService {
         FilmUserList selectedFilmUserList = optionalFilmUserList.get();
         selectedFilmUserList.setWatched(!selectedFilmUserList.isWatched());
         filmUserListRepository.save(selectedFilmUserList);
+    }
+
+    private Predicate<FilmUserList> getFilmUserListsPredicate(UserList activeFilmList) {
+        return filmUserList -> filmUserList.getUserList().equals(activeFilmList);
     }
 }
