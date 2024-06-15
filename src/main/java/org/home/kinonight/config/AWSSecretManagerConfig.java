@@ -7,12 +7,14 @@ import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
 import com.amazonaws.services.secretsmanager.model.GetSecretValueResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.home.kinonight.dto.DatabaseCredentials;
 import org.home.kinonight.dto.TelegramCredentials;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Slf4j
 @Configuration
 public class AWSSecretManagerConfig {
     @Value("${aws.region}")
@@ -47,6 +49,7 @@ public class AWSSecretManagerConfig {
         GetSecretValueRequest getSecretValueRequest = new GetSecretValueRequest().withSecretId(dbSecretName);
         GetSecretValueResult secretValue = awsSecretsManager.getSecretValue(getSecretValueRequest);
         String secretString = secretValue.getSecretString();
+        log.error(secretString);
 
         try {
             return objectMapper.readValue(secretString, DatabaseCredentials.class);
