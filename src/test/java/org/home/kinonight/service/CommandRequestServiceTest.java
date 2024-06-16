@@ -63,21 +63,21 @@ class CommandRequestServiceTest {
         when(actualTelegramClient.getCommand(getCommandRequestArgumentCaptor.capture()))
                 .thenReturn(getCommandResponse);
         // when
-        DoesNotExistException doesNotExistException = assertThrows(DoesNotExistException.class, () -> testee.checkIfCommandExists(chatId, generateUpdate(true)));
+        DoesNotExistException doesNotExistException = assertThrows(DoesNotExistException.class, () -> testee.checkIfCommandExists(chatId, generateUpdate(true, false)));
         // then
         ExceptionDetails expectedExceptionDetails = new ExceptionDetails(chatId, "Wrong list command");
         assertEquals(expectedExceptionDetails, doesNotExistException.getExceptionDetails());
     }
 
-    private static Update generateUpdate(boolean hasCallbackQuery) {
+    private static Update generateUpdate(boolean hasCallbackQuery, boolean isMessageHasSlash) {
         Update update = new Update();
         if (hasCallbackQuery) {
             CallbackQuery callbackQuery = new CallbackQuery();
-            callbackQuery.setData("/" + command);
+            callbackQuery.setData(command);
             update.setCallbackQuery(callbackQuery);
         } else {
             Message message = new Message();
-            message.setText(command);
+            message.setText(isMessageHasSlash ? "/" + command : command);
             update.setMessage(message);
         }
         return update;
@@ -85,15 +85,16 @@ class CommandRequestServiceTest {
 
     private GetCommandResponse generateCommandResponse() {
         GetCommandResponse getCommandResponse = new GetCommandResponse();
-        CommandRequest commandRequest = new CommandRequest("/" + command, "");
+        CommandRequest commandRequest = new CommandRequest(command, "");
         getCommandResponse.setResult(List.of(commandRequest));
         return getCommandResponse;
     }
 
     public static Stream<Arguments> generateParameters() {
         return Stream.of(
-                Arguments.of(generateUpdate(true), "/" + command),
-                Arguments.of(generateUpdate(false),"/" + command)
+                Arguments.of(generateUpdate(true, false),command),
+                Arguments.of(generateUpdate(false, false),command),
+                Arguments.of(generateUpdate(false, true),command)
         );
     }
 }
