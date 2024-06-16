@@ -31,7 +31,12 @@ public class CommandRequestService {
             command = update.getCallbackQuery().getData();
 
         } else {
-            command = "/" + update.getMessage().getText();
+            String messageText = update.getMessage().getText();
+            if (messageText.startsWith("/")) {
+                command = messageText.substring(1);
+            } else {
+                command = messageText;
+            }
         }
         if (!activeCommands.contains(command)) {
             ExceptionDetails exceptionDetails = new ExceptionDetails(chatId, "Wrong list command");
