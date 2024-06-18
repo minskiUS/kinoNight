@@ -45,6 +45,8 @@ public class KinoManagerBot extends AbilityBot {
             responseHandler.replyToUpdate(update);
             return;
         }
+        message.setText(message.getText().toLowerCase());
+        // TODO fix later
 
         if (START.equalsIgnoreCase(message.getText()) || ANOTHER_START.equalsIgnoreCase(message.getText())) {
             responseHandler.replyToStart(message);
